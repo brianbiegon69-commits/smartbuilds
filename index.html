@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Smart Builds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a drawing-sheet landing page. Concrete-grey ground, one safety-orange accent,
+   one blueprint-blue band for the programme chart. Square corners, hairline rules, mono labels. */
+:root{
+  --bg:#E9ECEA;
+  --surface:#F6F7F5;
+  --surface-2:#DDE1DE;
+  --fg:#12171C;
+  --muted:#505B65;
+  --line:#BFC5C2;
+  --accent:#E8571A;
+  --accent-fg:#12171C;
+  --accent-text:#B63F0C;
+  --ok:#2E7D4F;
+  --bp-bg:#0F2B46;
+  --bp-fg:#EAF1F8;
+  --bp-muted:#9DB4CA;
+  --bp-line:rgba(180,205,230,.24);
+  --bp-bar:rgba(234,241,248,.5);
+  --f-display:'Big Shoulders Display','Arial Narrow','Helvetica Neue',sans-serif;
+  --f-body:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1317;--surface:#171C22;--surface-2:#202730;--fg:#E7EAE8;--muted:#97A2AC;--line:#2B343D;
+    --accent:#FF6A2B;--accent-fg:#12171C;--accent-text:#FF8A55;--ok:#5BBE87;
+    --bp-bg:#0A1E33;--bp-line:rgba(160,190,220,.2);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1317;--surface:#171C22;--surface-2:#202730;--fg:#E7EAE8;--muted:#97A2AC;--line:#2B343D;
+  --accent:#FF6A2B;--accent-fg:#12171C;--accent-text:#FF8A55;--ok:#5BBE87;
+  --bp-bg:#0A1E33;--bp-line:rgba(160,190,220,.2);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+section[id],main[id]{scroll-margin-top:72px}
+
+.wrap{width:100%;max-width:1240px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sec{padding-block:clamp(48px,7vw,96px)}
+.mono{font-family:var(--f-mono)}
+
+/* Header */
+header.site{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:20px;min-height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-weight:800;font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase;text-decoration:none;white-space:nowrap}
+.mark rect{fill:var(--fg)}
+.mark rect.hi{fill:var(--accent)}
+nav.main{display:none;gap:28px;margin-left:auto}
+nav.main a{text-decoration:none;font-weight:500;font-size:.95rem;padding:6px 0;border-bottom:2px solid transparent}
+nav.main a:hover{border-bottom-color:var(--accent)}
+.hdr-cta{margin-left:auto}
+@media (min-width:860px){nav.main{display:flex}.hdr-cta{margin-left:0}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;font:600 .95rem var(--f-body);border:2px solid var(--fg);background:transparent;color:var(--fg);text-decoration:none;cursor:pointer;border-radius:2px}
+.btn:hover{background:var(--fg);color:var(--bg)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent);color:var(--accent-fg);filter:brightness(1.08)}
+
+/* Hero */
+.hero{padding-block:clamp(28px,5vw,64px) clamp(40px,6vw,80px)}
+.hero-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:920px){.hero-grid{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center;gap:56px}}
+h1{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(2.9rem,8vw,5.6rem);line-height:.92;letter-spacing:.005em;margin:0 0 20px;text-wrap:balance}
+h1 .on{color:var(--accent-text)}
+.lede{font-size:1.15rem;max-width:54ch;color:var(--muted);margin:0}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 32px}
+
+.board{border:2px solid var(--fg);background:var(--surface);max-width:560px}
+.board-head{height:14px;background:repeating-linear-gradient(-45deg,var(--accent) 0 12px,var(--fg) 12px 24px)}
+.board-title{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-bottom:1px solid var(--fg);font:500 .7rem var(--f-mono);letter-spacing:.12em;text-transform:uppercase}
+.board-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line)}
+.cell{background:var(--surface);padding:12px 14px}
+.cell b{display:block;font:800 2.7rem/1 var(--f-display);font-variant-numeric:tabular-nums}
+.cell span{display:block;margin-top:4px;font:500 .68rem/1.35 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.drawing{background:var(--surface);border:1px solid var(--line);min-width:0}
+.drawing .pad{padding:14px}
+.drawing svg{display:block;width:100%;height:auto}
+.titleblock{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;padding:9px 14px;border-top:1px solid var(--fg);font:500 .7rem var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* SVG tokens */
+.s-ln{stroke:var(--fg);stroke-width:1.6}
+.s-th{stroke:var(--fg);stroke-width:3}
+.s-mu{stroke:var(--muted);stroke-width:1}
+.s-nf{fill:none}
+.s-surf{fill:var(--surface)}
+.s-alt{fill:var(--surface-2)}
+.s-fg{fill:var(--fg)}
+.s-ac{fill:var(--accent)}
+.s-acl{stroke:var(--accent);stroke-width:3.5}
+.s-col{stroke:var(--fg);stroke-width:7}
+.s-colac{stroke:var(--accent);stroke-width:7}
+.s-grid{stroke:var(--muted);stroke-width:1;stroke-dasharray:12 3 2 3}
+.s-t{font:500 11px var(--f-mono);fill:var(--muted)}
+.s-tb{font:500 11px var(--f-mono);fill:var(--fg);text-anchor:middle}
+
+@media (prefers-reduced-motion:no-preference){
+  .draw{animation:draw 1.3s cubic-bezier(.3,.6,.2,1) both;animation-delay:var(--d,0s)}
+  @keyframes draw{from{stroke-dasharray:1;stroke-dashoffset:1}to{stroke-dasharray:1;stroke-dashoffset:0}}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* Section heads */
+.sec-head{display:grid;gap:12px;max-width:64ch;margin-bottom:36px}
+h2{font-family:var(--f-display);font-weight:800;text-transform:uppercase;font-size:clamp(2.1rem,5vw,3.4rem);line-height:.98;margin:0;text-wrap:balance}
+.sec-head p{margin:0;color:var(--muted);font-size:1.05rem}
+
+/* Services schedule */
+.schedule{border-top:2px solid var(--fg)}
+.srv-head{display:none}
+.srv{display:grid;gap:8px 24px;padding:22px 0;border-bottom:1px solid var(--line)}
+.srv h3{font:800 1.8rem/1 var(--f-display);text-transform:uppercase;margin:0}
+.srv p{margin:0;max-width:52ch}
+.srv .v{font:400 .92rem var(--f-mono);font-variant-numeric:tabular-nums}
+.srv .k{display:block;font:500 .68rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+@media (min-width:860px){
+  .srv-head,.srv{grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) minmax(0,.9fr) minmax(0,.9fr)}
+  .srv-head{display:grid;gap:24px;padding:10px 0;border-bottom:1px solid var(--line);font:500 .68rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .srv{align-items:baseline}
+  .srv .k{display:none}
+}
+
+/* Projects */
+.proj-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr))}
+.card{display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:2px}
+.thumb{background:var(--surface-2);border-bottom:1px solid var(--line);aspect-ratio:4/3;max-width:100%}
+.thumb svg{display:block;width:100%;height:100%}
+.card-body{display:grid;gap:12px;padding:16px 18px 20px}
+.card h3{margin:0;font:800 1.7rem/1 var(--f-display);text-transform:uppercase}
+.status{display:inline-flex;align-items:center;gap:8px;font:500 .7rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase}
+.status::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--ok)}
+.status.live::before{background:var(--accent)}
+.meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 16px;margin:0;font-size:.92rem}
+.meta dt{font:500 .68rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-top:3px}
+.meta dd{margin:0}
+
+/* Programme band */
+.bp{background:var(--bp-bg);color:var(--bp-fg)}
+.bp .sec-head p{color:var(--bp-muted)}
+.gantt{display:grid}
+.g-row{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--bp-line)}
+.g-label{font-size:.95rem;font-weight:500}
+.g-label small{display:inline-block;margin-left:8px;font:400 .72rem var(--f-mono);color:var(--bp-muted)}
+.g-track{position:relative;height:22px;border-right:1px solid var(--bp-line);background-image:linear-gradient(to right,var(--bp-line) 1px,transparent 1px);background-size:calc(100% / 6) 100%}
+.g-bar{position:absolute;top:3px;bottom:3px;left:calc(var(--s) / 72 * 100%);width:calc(var(--d) / 72 * 100%);background:var(--bp-bar);border-radius:1px}
+.g-bar.on{background:var(--accent)}
+.g-axis{position:relative;height:22px;font:500 .72rem var(--f-mono);color:var(--bp-muted)}
+.g-axis span{position:absolute;top:0;left:calc(var(--w) / 72 * 100%);transform:translateX(-50%)}
+.g-axis span:first-child{transform:none}
+.g-axis span:last-child{transform:translateX(-100%)}
+.g-note{margin:20px 0 0;font-size:.9rem;color:var(--bp-muted);display:flex;flex-wrap:wrap;gap:6px 22px}
+.g-note i{display:inline-block;width:14px;height:10px;margin-right:8px;background:var(--bp-bar);vertical-align:baseline}
+.g-note i.on{background:var(--accent)}
+@media (min-width:720px){
+  .g-row,.g-axis-row{grid-template-columns:240px minmax(0,1fr);align-items:center;gap:20px}
+  .g-axis-row{display:grid}
+}
+
+/* Practice */
+.pract{display:grid;gap:32px 44px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.pract article{border-top:2px solid var(--fg);padding-top:14px;min-width:0}
+.pract h3{margin:0 0 8px;font:800 1.7rem/1 var(--f-display);text-transform:uppercase}
+.pract p{margin:0;color:var(--muted)}
+
+/* Brief */
+.brief{background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.brief-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:920px){.brief-grid{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:64px}}
+.contact{display:grid;gap:14px;margin:28px 0 0;padding:0}
+.contact div{border-top:1px solid var(--line);padding-top:10px}
+.contact dt{font:500 .68rem var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.contact dd{margin:2px 0 0;font:400 1rem var(--f-mono)}
+.sel{user-select:all}
+form{display:grid;gap:18px;min-width:0}
+.f{display:grid;gap:6px;min-width:0}
+.row2{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+label{font:600 .85rem var(--f-body)}
+input,select,textarea{width:100%;min-height:46px;padding:10px 12px;font:400 1rem var(--f-body);color:var(--fg);background:var(--bg);border:1.5px solid var(--fg);border-radius:2px}
+textarea{min-height:120px;resize:vertical}
+input::placeholder,textarea::placeholder{color:var(--muted)}
+.out{display:grid;gap:12px;padding:18px;border:2px solid var(--fg);background:var(--bg);margin-top:4px}
+.out textarea{font:400 .88rem/1.5 var(--f-mono);min-height:230px}
+.out .row{display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.out p{margin:0;font-size:.92rem;color:var(--muted)}
+.out strong{color:var(--fg)}
+
+/* Footer */
+footer{padding-block:40px}
+.foot-grid{display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+footer p{margin:6px 0 0;color:var(--muted);font-size:.92rem}
+footer .note{margin-top:28px;padding-top:16px;border-top:1px solid var(--line);font:400 .78rem var(--f-mono);color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Smart Builds, back to top">
+      <svg class="mark" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+        <rect x="2" y="3" width="14" height="7"/><rect x="17" y="3" width="9" height="7"/>
+        <rect x="2" y="11" width="7" height="7"/><rect class="hi" x="10" y="11" width="16" height="7"/>
+        <rect x="2" y="19" width="14" height="7"/><rect x="17" y="19" width="9" height="7"/>
+      </svg>
+      <span>Smart Builds</span>
+    </a>
+    <nav class="main" aria-label="Sections">
+      <a href="#services">Services</a>
+      <a href="#projects">Projects</a>
+      <a href="#programme">Programme</a>
+      <a href="#practice">How we work</a>
+    </nav>
+    <a class="btn primary hdr-cta" href="#brief">Get a quote</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1>Built to the drawing. Handed over <span class="on">on the date.</span></h1>
+        <p class="lede">Smart Builds is a general contractor for homes, offices, warehouses and site works. One team is accountable from the first survey to the last defect sign-off.</p>
+        <div class="cta-row">
+          <a class="btn primary" href="#brief">Request a quote</a>
+          <a class="btn" href="#projects">See recent projects</a>
+        </div>
+        <div class="board" aria-label="Company site board">
+          <div class="board-head" aria-hidden="true"></div>
+          <div class="board-title"><span>Site board</span><span>Smart Builds</span></div>
+          <div class="board-grid">
+            <div class="cell"><b>412</b><span>Days without a lost-time injury</span></div>
+            <div class="cell"><b>7</b><span>Sites running now</span></div>
+            <div class="cell"><b>310</b><span>Projects handed over</span></div>
+            <div class="cell"><b>14 d</b><span>Average defect close-out</span></div>
+          </div>
+        </div>
+      </div>
+
+      <figure class="drawing" style="margin:0">
+        <div class="pad">
+          <svg viewBox="0 0 500 470" role="img" aria-label="Structural elevation of a six-storey concrete frame under construction. Four floors are complete, the fifth is columns only, and a tower crane lowers a precast panel into it.">
+            <defs>
+              <pattern id="bays" patternUnits="userSpaceOnUse" x="100" y="156" width="90" height="56">
+                <rect x="10" y="14" width="70" height="28" class="s-mu s-nf"/>
+                <line x1="45" y1="14" x2="45" y2="42" class="s-mu"/>
+              </pattern>
+              <pattern id="earth" patternUnits="userSpaceOnUse" width="8" height="10">
+                <path d="M0 10L8 0" class="s-mu s-nf"/>
+              </pattern>
+              <pattern id="lat" patternUnits="userSpaceOnUse" x="430" y="44" width="12" height="16">
+                <path d="M0 0L12 8L0 16" class="s-mu s-nf"/>
+              </pattern>
+            </defs>
+
+            <!-- gridlines A to D -->
+            <line x1="100" y1="92" x2="100" y2="437" class="s-grid"/>
+            <line x1="190" y1="92" x2="190" y2="437" class="s-grid"/>
+            <line x1="280" y1="92" x2="280" y2="437" class="s-grid"/>
+            <line x1="370" y1="92" x2="370" y2="437" class="s-grid"/>
+
+            <!-- ground -->
+            <rect x="20" y="380" width="470" height="10" fill="url(#earth)"/>
+            <line x1="20" y1="380" x2="490" y2="380" class="s-th"/>
+
+            <!-- completed storeys -->
+            <rect x="100" y="156" width="270" height="224" class="s-surf"/>
+            <rect x="100" y="156" width="270" height="224" fill="url(#bays)"/>
+            <rect x="92" y="377" width="286" height="6" class="s-fg"/>
+            <rect x="92" y="321" width="286" height="6" class="s-fg"/>
+            <rect x="92" y="265" width="286" height="6" class="s-fg"/>
+            <rect x="92" y="209" width="286" height="6" class="s-fg"/>
+            <rect x="92" y="153" width="286" height="6" class="s-fg"/>
+
+            <!-- columns, complete -->
+            <line class="s-col draw" pathLength="1" style="--d:.0s" x1="100" y1="380" x2="100" y2="156"/>
+            <line class="s-col draw" pathLength="1" style="--d:.1s" x1="190" y1="380" x2="190" y2="156"/>
+            <line class="s-col draw" pathLength="1" style="--d:.2s" x1="280" y1="380" x2="280" y2="156"/>
+            <line class="s-col draw" pathLength="1" style="--d:.3s" x1="370" y1="380" x2="370" y2="156"/>
+            <!-- columns, in progress -->
+            <line class="s-colac draw" pathLength="1" style="--d:1.0s" x1="100" y1="156" x2="100" y2="100"/>
+            <line class="s-colac draw" pathLength="1" style="--d:1.1s" x1="190" y1="156" x2="190" y2="100"/>
+            <line class="s-colac draw" pathLength="1" style="--d:1.2s" x1="280" y1="156" x2="280" y2="100"/>
+            <line class="s-colac draw" pathLength="1" style="--d:1.3s" x1="370" y1="156" x2="370" y2="100"/>
+            <!-- rebar starters -->
+            <g class="s-ln">
+              <line x1="98" y1="100" x2="98" y2="84"/><line x1="102" y1="100" x2="102" y2="84"/>
+              <line x1="188" y1="100" x2="188" y2="84"/><line x1="192" y1="100" x2="192" y2="84"/>
+              <line x1="278" y1="100" x2="278" y2="84"/><line x1="282" y1="100" x2="282" y2="84"/>
+              <line x1="368" y1="100" x2="368" y2="84"/><line x1="372" y1="100" x2="372" y2="84"/>
+            </g>
+
+            <!-- levels -->
+            <g>
+              <line x1="62" y1="380" x2="92" y2="380" class="s-mu"/><text x="8" y="376" class="s-t">+0.00</text>
+              <line x1="62" y1="324" x2="92" y2="324" class="s-mu"/><text x="8" y="320" class="s-t">+3.60</text>
+              <line x1="62" y1="268" x2="92" y2="268" class="s-mu"/><text x="8" y="264" class="s-t">+7.20</text>
+              <line x1="62" y1="212" x2="92" y2="212" class="s-mu"/><text x="8" y="208" class="s-t">+10.80</text>
+              <line x1="62" y1="156" x2="92" y2="156" class="s-mu"/><text x="8" y="152" class="s-t">+14.40</text>
+              <line x1="62" y1="100" x2="92" y2="100" class="s-mu"/><text x="8" y="96" class="s-t">+18.00</text>
+            </g>
+
+            <!-- dimension strings, millimetres -->
+            <line x1="100" y1="410" x2="370" y2="410" class="s-mu"/>
+            <line x1="96" y1="414" x2="104" y2="406" class="s-mu"/><line x1="186" y1="414" x2="194" y2="406" class="s-mu"/>
+            <line x1="276" y1="414" x2="284" y2="406" class="s-mu"/><line x1="366" y1="414" x2="374" y2="406" class="s-mu"/>
+            <text x="145" y="404" class="s-tb">7200</text><text x="235" y="404" class="s-tb">7200</text><text x="325" y="404" class="s-tb">7200</text>
+            <line x1="100" y1="428" x2="370" y2="428" class="s-mu"/>
+            <line x1="96" y1="432" x2="104" y2="424" class="s-mu"/><line x1="366" y1="432" x2="374" y2="424" class="s-mu"/>
+            <text x="235" y="424" class="s-tb">21600</text>
+
+            <!-- grid bubbles -->
+            <g>
+              <circle cx="100" cy="448" r="11" class="s-surf s-ln"/><text x="100" y="452" class="s-tb">A</text>
+              <circle cx="190" cy="448" r="11" class="s-surf s-ln"/><text x="190" y="452" class="s-tb">B</text>
+              <circle cx="280" cy="448" r="11" class="s-surf s-ln"/><text x="280" y="452" class="s-tb">C</text>
+              <circle cx="370" cy="448" r="11" class="s-surf s-ln"/><text x="370" y="452" class="s-tb">D</text>
+            </g>
+
+            <!-- tower crane -->
+            <rect x="430" y="44" width="12" height="336" fill="url(#lat)"/>
+            <line x1="430" y1="380" x2="430" y2="44" class="s-ln"/>
+            <line x1="442" y1="380" x2="442" y2="44" class="s-ln"/>
+            <rect x="422" y="372" width="28" height="8" class="s-fg"/>
+            <polyline points="430,44 436,20 442,44" class="s-ln s-nf"/>
+            <line x1="205" y1="44" x2="496" y2="44" class="s-th"/>
+            <line x1="436" y1="20" x2="212" y2="44" class="s-mu"/>
+            <line x1="436" y1="20" x2="492" y2="44" class="s-mu"/>
+            <rect x="470" y="46" width="24" height="18" class="s-fg"/>
+            <rect x="444" y="48" width="16" height="12" class="s-surf s-ln"/>
+            <rect x="229" y="44" width="12" height="7" class="s-fg"/>
+            <line x1="235" y1="51" x2="235" y2="108" class="s-mu"/>
+            <line x1="235" y1="108" x2="209" y2="124" class="s-mu"/>
+            <line x1="235" y1="108" x2="261" y2="124" class="s-mu"/>
+            <rect x="205" y="124" width="60" height="26" class="s-ac s-ln"/>
+          </svg>
+        </div>
+        <figcaption class="titleblock"><span>Elevation, gridlines A to D</span><span>Scale 1:200</span><span>Rev C</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section id="services" class="sec" style="border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>What we build</h2>
+        <p>Five kinds of work, priced and programmed the same way: a bill of quantities you can read and a programme you can hold us to.</p>
+      </div>
+      <div class="schedule">
+        <div class="srv-head" aria-hidden="true"><span>Service</span><span>Scope</span><span>Typical size</span><span>Typical programme</span></div>
+
+        <article class="srv">
+          <h3>Homes &amp; apartments</h3>
+          <p>New houses, townhouse groups and apartment blocks up to 12 storeys.</p>
+          <div class="v"><span class="k">Typical size</span>150–15,000 m²</div>
+          <div class="v"><span class="k">Typical programme</span>8–24 months</div>
+        </article>
+        <article class="srv">
+          <h3>Offices &amp; retail</h3>
+          <p>Core-and-shell construction and tenant fit-out, together or separately.</p>
+          <div class="v"><span class="k">Typical size</span>500–20,000 m²</div>
+          <div class="v"><span class="k">Typical programme</span>6–18 months</div>
+        </article>
+        <article class="srv">
+          <h3>Warehouses &amp; factories</h3>
+          <p>Steel portal frames, ground slabs, hardstanding and loading docks.</p>
+          <div class="v"><span class="k">Typical size</span>1,000–30,000 m²</div>
+          <div class="v"><span class="k">Typical programme</span>4–12 months</div>
+        </article>
+        <article class="srv">
+          <h3>Renovation &amp; extensions</h3>
+          <p>Structural alterations and refurbishment, phased around the people using the building.</p>
+          <div class="v"><span class="k">Typical size</span>50–3,000 m²</div>
+          <div class="v"><span class="k">Typical programme</span>6–40 weeks</div>
+        </article>
+        <article class="srv">
+          <h3>Site works &amp; civils</h3>
+          <p>Access roads, drainage, retaining walls and external works.</p>
+          <div class="v"><span class="k">Typical size</span>Priced by quantity</div>
+          <div class="v"><span class="k">Typical programme</span>4–30 weeks</div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects" class="sec" style="background:var(--surface);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Recent projects</h2>
+        <p>Three jobs from the last two years, drawn as the building team sees them: an elevation, a gable end and a plan.</p>
+      </div>
+      <div class="proj-grid">
+
+        <article class="card">
+          <div class="thumb">
+            <svg viewBox="0 0 320 240" role="img" aria-label="Elevation of a six-storey apartment block">
+              <defs>
+                <pattern id="apt" patternUnits="userSpaceOnUse" x="70" y="52" width="36" height="25">
+                  <rect x="7" y="5" width="22" height="15" class="s-mu s-nf"/>
+                  <line x1="18" y1="5" x2="18" y2="20" class="s-mu"/>
+                </pattern>
+              </defs>
+              <rect x="70" y="52" width="180" height="150" class="s-surf s-ln"/>
+              <rect x="70" y="52" width="180" height="150" fill="url(#apt)"/>
+              <g class="s-mu">
+                <line x1="70" y1="77" x2="250" y2="77"/><line x1="70" y1="102" x2="250" y2="102"/>
+                <line x1="70" y1="127" x2="250" y2="127"/><line x1="70" y1="152" x2="250" y2="152"/>
+                <line x1="70" y1="177" x2="250" y2="177"/>
+              </g>
+              <rect x="214" y="36" width="36" height="16" class="s-alt s-ln"/>
+              <rect x="66" y="46" width="188" height="6" class="s-fg"/>
+              <rect x="142" y="177" width="36" height="25" class="s-ac s-ln"/>
+              <line x1="20" y1="202" x2="300" y2="202" class="s-th"/>
+              <line x1="256" y1="46" x2="268" y2="46" class="s-mu"/><text x="270" y="50" class="s-t">+21.60</text>
+              <line x1="256" y1="202" x2="268" y2="202" class="s-mu"/><text x="270" y="206" class="s-t">+0.00</text>
+            </svg>
+          </div>
+          <div class="card-body">
+            <span class="status">Handed over</span>
+            <h3>Riverside Terraces</h3>
+            <dl class="meta">
+              <dt>Type</dt><dd>48 apartments, 6 storeys</dd>
+              <dt>Area</dt><dd class="mono">5,900 m²</dd>
+              <dt>Programme</dt><dd class="mono">15 months</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="thumb">
+            <svg viewBox="0 0 320 240" role="img" aria-label="Gable-end elevation of a warehouse with a roller door">
+              <defs>
+                <pattern id="clad" patternUnits="userSpaceOnUse" width="8" height="10">
+                  <line x1="0" y1="0" x2="0" y2="10" class="s-mu"/>
+                </pattern>
+                <pattern id="slat" patternUnits="userSpaceOnUse" x="122" y="146" width="10" height="6">
+                  <line x1="0" y1="5" x2="10" y2="5" class="s-mu"/>
+                </pattern>
+              </defs>
+              <polygon points="60,202 60,130 160,100 260,130 260,202" class="s-surf s-ln"/>
+              <polygon points="60,202 60,130 160,100 260,130 260,202" fill="url(#clad)"/>
+              <rect x="122" y="146" width="76" height="56" class="s-surf s-ln"/>
+              <rect x="122" y="146" width="76" height="56" fill="url(#slat)"/>
+              <rect x="214" y="170" width="22" height="32" class="s-ac s-ln"/>
+              <line x1="20" y1="202" x2="300" y2="202" class="s-th"/>
+              <line x1="34" y1="130" x2="60" y2="130" class="s-mu"/><text x="4" y="126" class="s-t">+9.00</text>
+              <line x1="160" y1="100" x2="196" y2="100" class="s-mu"/><text x="200" y="104" class="s-t">+12.75</text>
+              <line x1="34" y1="202" x2="60" y2="202" class="s-mu"/><text x="4" y="198" class="s-t">+0.00</text>
+            </svg>
+          </div>
+          <div class="card-body">
+            <span class="status live">On site, week 31 of 46</span>
+            <h3>Northgate Distribution Hub</h3>
+            <dl class="meta">
+              <dt>Type</dt><dd>Warehouse and 6 loading docks</dd>
+              <dt>Area</dt><dd class="mono">18,500 m²</dd>
+              <dt>Programme</dt><dd class="mono">11 months</dd>
+            </dl>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="thumb">
+            <svg viewBox="0 0 320 240" role="img" aria-label="Floor plan of an office refurbishment showing existing and new walls">
+              <rect x="30" y="30" width="260" height="170" class="s-surf s-th"/>
+              <rect x="30" y="30" width="70" height="80" class="s-alt s-ln"/>
+              <!-- desks -->
+              <g class="s-alt s-ln" style="stroke-width:1">
+                <rect x="46" y="138" width="30" height="14"/><rect x="88" y="138" width="30" height="14"/><rect x="130" y="138" width="30" height="14"/>
+                <rect x="46" y="170" width="30" height="14"/><rect x="88" y="170" width="30" height="14"/><rect x="130" y="170" width="30" height="14"/>
+              </g>
+              <!-- existing partitions -->
+              <g class="s-ln">
+                <line x1="100" y1="30" x2="100" y2="110"/>
+                <line x1="30" y1="110" x2="100" y2="110"/>
+              </g>
+              <!-- new partitions -->
+              <g class="s-acl">
+                <line x1="200" y1="30" x2="200" y2="68"/>
+                <line x1="200" y1="88" x2="200" y2="200"/>
+                <line x1="200" y1="110" x2="290" y2="110"/>
+                <line x1="100" y1="110" x2="200" y2="110"/>
+              </g>
+              <path d="M220 68 A20 20 0 0 1 200 88" class="s-mu s-nf"/>
+              <line x1="200" y1="68" x2="220" y2="68" class="s-ln"/>
+              <!-- legend -->
+              <line x1="30" y1="222" x2="52" y2="222" class="s-ln"/><text x="58" y="226" class="s-t">Existing</text>
+              <line x1="136" y1="222" x2="158" y2="222" class="s-acl"/><text x="164" y="226" class="s-t">New work</text>
+            </svg>
+          </div>
+          <div class="card-body">
+            <span class="status">Handed over</span>
+            <h3>Kilnworks Offices</h3>
+            <dl class="meta">
+              <dt>Type</dt><dd>Refurbishment, building occupied</dd>
+              <dt>Area</dt><dd class="mono">2,400 m²</dd>
+              <dt>Programme</dt><dd class="mono">9 months</dd>
+            </dl>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="programme" class="sec bp">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>A typical programme, week by week</h2>
+        <p>This is how a mid-size commercial building runs from first meeting to keys. The overlaps are deliberate: buying starts before approvals finish, and finishes start before the envelope closes.</p>
+      </div>
+
+      <div class="gantt" role="table" aria-label="Typical 72-week programme">
+        <div class="g-axis-row" aria-hidden="true">
+          <span></span>
+          <div class="g-axis">
+            <span style="--w:0">wk 0</span><span style="--w:12">12</span><span style="--w:24">24</span><span style="--w:36">36</span><span style="--w:48">48</span><span style="--w:60">60</span><span style="--w:72">72</span>
+          </div>
+        </div>
+
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Brief &amp; site survey<small>wk 0–4</small></div>
+          <div class="g-track"><div class="g-bar" style="--s:0;--d:4"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Design, permits &amp; approvals<small>wk 3–16</small></div>
+          <div class="g-track"><div class="g-bar" style="--s:3;--d:13"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Buying &amp; mobilisation<small>wk 12–20</small></div>
+          <div class="g-track"><div class="g-bar" style="--s:12;--d:8"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Substructure &amp; frame<small>wk 20–40</small></div>
+          <div class="g-track"><div class="g-bar on" style="--s:20;--d:20"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Envelope &amp; services<small>wk 34–58</small></div>
+          <div class="g-track"><div class="g-bar on" style="--s:34;--d:24"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Finishes &amp; commissioning<small>wk 52–66</small></div>
+          <div class="g-track"><div class="g-bar on" style="--s:52;--d:14"></div></div>
+        </div>
+        <div class="g-row" role="row">
+          <div class="g-label" role="cell">Handover &amp; snagging<small>wk 64–70</small></div>
+          <div class="g-track"><div class="g-bar" style="--s:64;--d:6"></div></div>
+        </div>
+      </div>
+
+      <p class="g-note"><span><i class="on"></i>On-site construction</span><span><i></i>Design, approvals, buying and handover</span></p>
+    </div>
+  </section>
+
+  <section id="practice" class="sec">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>How we run a site</h2>
+        <p>Four habits that show up on every job, whatever the size.</p>
+      </div>
+      <div class="pract">
+        <article>
+          <h3>One report, every Friday</h3>
+          <p>Programme against plan, cost against budget, photographs from each area and the three biggest open risks. Sent to you, not saved for the next meeting.</p>
+        </article>
+        <article>
+          <h3>A price that matches the drawings</h3>
+          <p>Lump sum once the drawings are complete. Open-book with a capped fee while the design is still moving. You choose at tender, and we explain what each choice costs you.</p>
+        </article>
+        <article>
+          <h3>Safe before fast</h3>
+          <p>Every worker is inducted before entering. A toolbox talk opens each shift. An independent safety audit runs monthly and the result goes on the site board.</p>
+        </article>
+        <article>
+          <h3>Handover with nothing missing</h3>
+          <p>A defects walk-round with you before the keys change hands. Snags closed within 14 days. As-built drawings, manuals and warranties delivered in one indexed folder.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="brief" class="sec brief">
+    <div class="wrap brief-grid">
+      <div>
+        <div class="sec-head" style="margin-bottom:0">
+          <h2>Tell us what you want to build</h2>
+          <p>Fill in what you know. The form turns it into a one-page brief you can copy and email to our estimating team. We reply with questions and a visit date within two working days.</p>
+        </div>
+        <dl class="contact">
+          <div><dt>Estimating</dt><dd class="sel">hello@smartbuilds.example</dd></div>
+          <div><dt>Office</dt><dd>Mon–Fri, 07:30–17:00</dd></div>
+          <div><dt>Site visits</dt><dd>Free for projects over 150 m²</dd></div>
+        </dl>
+      </div>
+
+      <div>
+        <form id="brief-form">
+          <div class="row2">
+            <div class="f">
+              <label for="b-name">Your name</label>
+              <input id="b-name" name="name" type="text" autocomplete="name" required>
+            </div>
+            <div class="f">
+              <label for="b-contact">Email or phone</label>
+              <input id="b-contact" name="contact" type="text" autocomplete="email" required>
+            </div>
+          </div>
+          <div class="row2">
+            <div class="f">
+              <label for="b-type">Project type</label>
+              <select id="b-type" name="type" required>
+                <option value="">Choose one</option>
+                <option>Home or apartments</option>
+                <option>Office or retail</option>
+                <option>Warehouse or factory</option>
+                <option>Renovation or extension</option>
+                <option>Site works or civils</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="b-area">Approximate floor area (m²)</label>
+              <input id="b-area" name="area" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g. 1200">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="f">
+              <label for="b-site">Where are you starting from?</label>
+              <select id="b-site" name="site">
+                <option>We own the land</option>
+                <option>Land is under offer</option>
+                <option>There is an existing building</option>
+                <option>Still looking for a site</option>
+              </select>
+            </div>
+            <div class="f">
+              <label for="b-start">Target start</label>
+              <input id="b-start" name="start" type="month">
+            </div>
+          </div>
+          <div class="f">
+            <label for="b-notes">About the project</label>
+            <textarea id="b-notes" name="notes" placeholder="Number of floors, rough layout, drawings you already have, access constraints, anything that worries you."></textarea>
+          </div>
+          <div><button class="btn primary" type="submit">Prepare my brief</button></div>
+        </form>
+
+        <div class="out" id="brief-out" hidden>
+          <label for="brief-text">Your brief</label>
+          <textarea id="brief-text" readonly></textarea>
+          <div class="row">
+            <button class="btn" type="button" id="copy-btn">Copy brief</button>
+            <span id="copy-msg" role="status" class="mono" style="font-size:.85rem"></span>
+          </div>
+          <p>Email it to <strong class="mono sel">hello@smartbuilds.example</strong>. This page prepares the text only; it does not send anything.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top" aria-label="Smart Builds, back to top">
+          <svg class="mark" viewBox="0 0 28 28" width="28" height="28" aria-hidden="true">
+            <rect x="2" y="3" width="14" height="7"/><rect x="17" y="3" width="9" height="7"/>
+            <rect x="2" y="11" width="7" height="7"/><rect class="hi" x="10" y="11" width="16" height="7"/>
+            <rect x="2" y="19" width="14" height="7"/><rect x="17" y="19" width="9" height="7"/>
+          </svg>
+          <span>Smart Builds</span>
+        </a>
+        <p>General contractor for building and construction.</p>
+      </div>
+      <div>
+        <p class="mono" style="margin-top:0">hello@smartbuilds.example<br>+000 000 000 000</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var form=document.getElementById('brief-form');
+  var out=document.getElementById('brief-out');
+  var ta=document.getElementById('brief-text');
+  var copyBtn=document.getElementById('copy-btn');
+  var msg=document.getElementById('copy-msg');
+
+  function val(id){return (document.getElementById(id).value||'').trim();}
+
+  function monthLabel(v){
+    if(!v) return 'Flexible';
+    var p=v.split('-');
+    var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,1);
+    try{return d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});}catch(e){return v;}
+  }
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var area=val('b-area');
+    var lines=[
+      'Project brief for Smart Builds',
+      '',
+      'Name: '+val('b-name'),
+      'Contact: '+val('b-contact'),
+      'Project type: '+val('b-type'),
+      'Approximate floor area: '+(area?area+' m²':'Not sure yet'),
+      'Starting from: '+val('b-site'),
+      'Target start: '+monthLabel(val('b-start')),
+      '',
+      'About the project:',
+      val('b-notes')||'(nothing added)'
+    ];
+    ta.value=lines.join('\n');
+    msg.textContent='';
+    out.hidden=false;
+    try{out.scrollIntoView({behavior:'smooth',block:'nearest'});}catch(err){}
+  });
+
+  copyBtn.addEventListener('click',function(){
+    var text=ta.value;
+    function fallback(){
+      ta.focus();ta.select();
+      msg.textContent='Text selected. Copy it with your keyboard.';
+    }
+    try{
+      navigator.clipboard.writeText(text).then(function(){
+        msg.textContent='Copied';
+      },fallback);
+    }catch(err){fallback();}
+  });
+})();
+</script>
+
+</body>
+</html>
